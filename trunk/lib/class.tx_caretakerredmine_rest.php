@@ -105,6 +105,14 @@ class tx_caretakerredmine_rest {
 
 	/// --- ISSUES --- ///
 
+	/**
+	 * Returns the open issues over all projects. Output format is defined by parameter $format.
+	 *
+	 * @param string	$status:	The status of the tickets that should be returned (e.g. open, closed / DEFAULT: open)
+	 * @param integer	$limit:		The maximum number of returned issues (DEFAULT: 25)
+	 * @param string	$format:	The format that should be returned (json or xml / DEFAULT: json)
+	 * @return string
+	 */
 	public function getIssuesRaw($status = 'open', $limit = 25, $format = 'json') {
 		return $this->sendRequest(
 			'issues',
@@ -115,10 +123,26 @@ class tx_caretakerredmine_rest {
 			$format);
 	}
 
+	/**
+	 * Returns all open issues over all projects as array
+	 *
+	 * @param string	$status:	The status of the tickets that should be returned (e.g. open, closed / DEFAULT: open)
+	 * @param integer	$limit:		The maximum number of returned issues (DEFAULT: 25)
+	 * @return array
+	 */
 	public function getIssues($status = 'open', $limit = 25) {
 		return json_decode($this->getIssuesRaw($status, $limit, 'json'));
 	}
 
+	/**
+	 * Returns the open issues for a given project. Output format is defined by parameter $format.
+	 *
+	 * @param string	$projectId: The Redmine id of the project can either be an integer or the id defined in Redmine itself
+	 * @param string	$status:	The status of the tickets that should be returned (e.g. open, closed / DEFAULT: open)
+	 * @param integer	$limit:		The maximum number of returned issues (DEFAULT: 25)
+	 * @param string	$format:	The format that should be returned (json or xml / DEFAULT: json)
+	 * @return string
+	 */
 	public function getIssuesForProjectRaw($projectId, $status = 'open', $limit = 25, $format = 'json') {
 		// project_id
 		return $this->sendRequest(
@@ -131,6 +155,14 @@ class tx_caretakerredmine_rest {
 			$format);
 	}
 
+	/**
+	 * Returns the open issues for a given project as array.
+	 *
+	 * @param string	$projectId: The Redmine id of the project can either be an integer or the id defined in Redmine itself
+	 * @param string	$status:	The status of the tickets that should be returned (e.g. open, closed / DEFAULT: open)
+	 * @param integer	$limit:		The maximum number of returned issues (DEFAULT: 25)
+	 * @return array
+	 */
 	public function getIssuesForProject($projectId, $status = 'open', $limit = 25) {
 		return json_decode($this->getIssuesForProjectRaw($projectId, $status, $limit, 'json'));
 	}

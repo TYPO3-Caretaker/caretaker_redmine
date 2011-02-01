@@ -32,7 +32,6 @@
  * n@work GmbH - http://www.work.de
  * networkteam GmbH - http://www.networkteam.com/
  *
- * $Id: class.tx_caretaker_Cli.php 28420 2010-01-05 16:51:51Z martoro $
  */
 
 /**
