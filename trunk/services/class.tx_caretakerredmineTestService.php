@@ -51,7 +51,7 @@ class tx_caretakerredmineTestService extends tx_caretaker_TestServiceBase {
 	 * 
 	 * @return tx_caretaker_TestResult
 	 */
-	public function runTest(){
+	public function runTest() {
 
 		$config = $this->getConfiguration();
 		var_dump($config);
@@ -155,12 +155,15 @@ class tx_caretakerredmineTestService extends tx_caretaker_TestServiceBase {
 
 	}
 
+	protected function
+
+
 	/**
 	 * Get the configuration for the Test
 	 * 
 	 * @return array 
 	 */
-	public function getConfiguration() {
+	protected function getConfiguration() {
 				
 		$config = array(
 			'redmine_url'	=> $this->getConfigValue('redmine_url'),
