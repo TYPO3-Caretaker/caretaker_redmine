@@ -51,11 +51,11 @@ class tx_caretakerredmine_rest {
 	private $host = '';
 
 	/**
-	 * Constructor
+	 * host setter
 	 *
 	 * @param string $host: The host incl. the redmine API key
 	 */
-	public function __construct($host) {
+	public function setHost($host) {
 		$this->host = $host;
 	}
 
@@ -104,6 +104,36 @@ class tx_caretakerredmine_rest {
 	}
 
 	/// --- ISSUES --- ///
+
+	public function getIssuesRaw($status = 'open', $limit = 25, $format = 'json') {
+		return $this->sendRequest(
+			'issues',
+			array(
+				'status_id' => $status,
+				'limit' => $limit
+			),
+			$format);
+	}
+
+	public function getIssues($status = 'open', $limit = 25) {
+		return json_decode($this->getIssuesRaw($status, $limit, 'json'));
+	}
+
+	public function getIssuesForProjectRaw($projectId, $status = 'open', $limit = 25, $format = 'json') {
+		// project_id
+		return $this->sendRequest(
+			'issues',
+			array(
+				'status_id' => $status,
+				'project_id' => $projectId,
+				'limit' => $limit
+			),
+			$format);
+	}
+
+	public function getIssuesForProject($projectId, $status = 'open', $limit = 25) {
+		return json_decode($this->getIssuesForProjectRaw($projectId, $status, $limit, 'json'));
+	}
 
 	/**
 	 * Returns a list of all issues that are assigend to a certain user. The result format is

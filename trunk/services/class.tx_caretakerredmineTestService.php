@@ -47,6 +47,7 @@ class tx_caretakerredmineTestService extends tx_caretaker_TestServiceBase {
 	
 	private $state = tx_caretaker_Constants::state_ok;
 
+	private $restClient = null;
 	/**
 	 * 
 	 * @return tx_caretaker_TestResult
@@ -54,109 +55,84 @@ class tx_caretakerredmineTestService extends tx_caretaker_TestServiceBase {
 	public function runTest() {
 
 		$config = $this->getConfiguration();
-		var_dump($config);
-
-		/*
-		$rsmlUrl   = $config['rsmlUrl'];
-		if (strpos( $rsmlUrl, '://' ) === false  && $this->instance) {
-			$rsmlUrl = $this->instance->getUrl() . '/' . $rsmlUrl;
-		}
-
-		$expectedRsmlId      = $config['expectedRsmlId'];
-		$expectedRsmlVersion = $config['expectedRsmlVersion'];
-		$expectedStatus      = $config['expectedStatus'];
-		$expectedValue       = $config['expectedValue'];
 		
-		if ( ! ( $rsmlUrl && $expectedRsmlId && $expectedRsmlVersion ) ) {
-			return tx_caretaker_TestResult::create(tx_caretaker_Constants::state_error, 0, 'You have to define URL ID and Version conditions for this test'.chr(10).var_export($config, true) );
-		} else {
-			$httpResult = $this->executeHttpRequest($rsmlUrl);
-			if ( $httpResult['response'] && $httpResult['info']['http_code'] == 200 ){
+		$host = $config['protocol'].'://'.$config['api_key'].':foobar@'.$config['redmine_url'].'/';
+		t3lib_div::debug($host);
+		/**
+		 * @var tx_caretakerredmine_rest
+		 */
+		$this->restClient = t3lib_div::makeInstance('tx_caretakerredmine_rest');
+		$this->restClient->setHost($host);
+		$result = null;
 
-				try {
-					$xml = new SimpleXMLElement( $httpResult['response'] );
-				} catch (Exception $e ){
-					return tx_caretaker_TestResult::create( tx_caretaker_Constants::state_error, 0, 'Returened result xml could not be parsed. ' . chr(10) . htmlspecialchars($httpResult['response']) );
-				}
-				
-				$returnedRsmlId      = ( isset($xml->rsmlId) ) ? (string)$xml->rsmlId : false;
-				$returnedRsmlVersion = ( isset($xml->rsmlVersion) ) ?  (string)$xml->rsmlVersion : false;
-
-				$returnedStatus  = ( isset($xml->status)  ) ? (string)$xml->status  : false;
-				$returnedValue   = ( isset($xml->value)   ) ? (string)$xml->value   : 0;
-				$returnedMessage = ( isset($xml->message) ) ? (string)$xml->message : false;
-				$returnedDescription = ( isset($xml->description) ) ? (string)$xml->description : false;
-
-				$message = '';
-				$submessages = array();
-				
-					// script id is wrong
-				if ( !$returnedRsmlId || $returnedRsmlId != $expectedRsmlId ) {
-					$this->decreaseState( tx_caretaker_Constants::state_error );
-					$submessages[] = new tx_caretaker_ResultMessage(
-						'Script ID was wrong. Expected ###VALUE_EXPECTED### returned ###VALUE_RETURNED###',
-						array( 'expected'=>$expectedRsmlId, 'returned' =>$returnedRsmlId )
-					);
-				}
-
-					// script version is wrong
-				if ( !$returnedRsmlVersion || t3lib_div::int_from_ver($returnedRsmlVersion) != t3lib_div::int_from_ver( $expectedRsmlVersion ) ) {
-					$this->decreaseState( tx_caretaker_Constants::state_error );
-					$submessages[] = new tx_caretaker_ResultMessage(
-						'Script Version was wrong. Expected ###VALUE_EXPECTED### returned ###VALUE_RETURNED###',
-						array( 'expected'=>$expectedRsmlVersion, 'returned' =>$returnedRsmlVersion )
-					);
-				}
-
-					// if the checks until now were ok
-				if ( $this->status == 0  ){
-					
-						// show description
-					if ($returnedDescription) {
-						$message = $returnedDescription;
-					}
-
-					if ( $expectedStatus || (int)$returnedStatus !== (int)$expectedStatus ){
-						if ($returnedStatus){
-							$this->decreaseState( $returnedStatus );
-						} else {
-							$this->decreaseState( tx_caretaker_Constants::state_error );
-						}
-						$submessages[] = new tx_caretaker_ResultMessage(
-							'Status was wrong. Expected ###VALUE_EXPECTED### returned ###VALUE_RETURNED###',
-							array( 'expected'=>$expectedStatus, 'returned' =>$returnedStatus )
-						);
-					}
-
-						// value
-					if ( $expectedValue && !$this->isValueInRange( $returnedValue, $expectedValue)  ){
-						$this->decreaseState( tx_caretaker_Constants::state_error );
-						$submessages[] = new tx_caretaker_ResultMessage(
-							'Value was wrong. Expected ###VALUE_EXPECTED### returned ###VALUE_RETURNED###',
-							array( 'expected'=>$expectedValue, 'returned' =>$returnedValue )
-						);
-					}
-
-						// submessages
-					if ($returnedMessage){
-						$submessages[] = new tx_caretaker_ResultMessage( 'Messages:' . chr(10) . $returnedMessage );
-					}
-				}
-
-				return tx_caretaker_TestResult::create( $this->state, $returnedValue, $message, $submessages );
-
-			} else {
-
-				return tx_caretaker_TestResult::create( tx_caretaker_Constants::state_error, 0, 'Unexpected Script Response' . chr(10) . $rsmlUrl . chr(10).var_export($httpResult, true) );
-				
-			}
+		switch ($config['method']) {
+			case 'allOpenTickets':
+				$result = $this->checkAllOpenTickets();
+				break;
+			case 'openTicketsInProject':
+				$result = $this->checkOpenTicketsInProject();
+				break;
+			default:
+				$result = tx_caretaker_TestResult::create(tx_caretaker_Constants::state_error, 0, 'No request method defined!');
+				break;
 		}
-		*/
+
+		return $result;
+	}
+
+	protected function checkAllOpenTickets() {
+		$issues = $this->restClient->getIssues('open', 1);
+		$issueCount = intval($issues->total_count);
+
+		$warningThreshold = $this->getConfigValue('optWarningThreshold');
+		$errorThreshold = $this->getConfigValue('optErrorThreshold');
+
+		$state = tx_caretaker_Constants::state_ok;
+		$message = 'A total of '.$issueCount.' open issues found.';
+
+		if (!empty($warningThreshold) && $issueCount > $warningThreshold) {
+			$state = tx_caretaker_Constants::state_warning;
+			$message = 'WARNING! '.$message.' Expected a value under '.$warningThreshold.'.';
+		}
+
+		if (!empty($errorThreshold) && $issueCount > $errorThreshold) {
+			$state = tx_caretaker_Constants::state_error;
+			$message = 'ERROR! '.$message.' Expected a value under '.$errorThreshold.'.';
+		}
+
+		return tx_caretaker_TestResult::create($state, $issueCount, $message);
 
 	}
 
-	protected function
+	protected function checkOpenTicketsInProject() {
+		$state = tx_caretaker_Constants::state_warning;
+		$message = 'Something went wrong. ^^';
+		$issueCount = 0;
 
+		$projectId = $this->getConfigValue('optProjectId');
+
+		if (empty($projectId)) {
+			$state = tx_caretaker_Constants::state_error;
+			$message = 'No project id given in test setup.';
+		} else {
+			$state = tx_caretaker_Constants::state_ok;
+			$issues = $this->restClient->getIssuesForProject($projectId, 'open', 1);
+			$issueCount = intval($issues->total_count);
+			$message = $issueCount.' open issues found for project "'.$projectId.'".';
+
+			if (!empty($warningThreshold) && $issueCount > $warningThreshold) {
+				$state = tx_caretaker_Constants::state_warning;
+				$message = 'WARNING! '.$message.' Expected a value under '.$warningThreshold.'.';
+			}
+
+			if (!empty($errorThreshold) && $issueCount > $errorThreshold) {
+				$state = tx_caretaker_Constants::state_error;
+				$message = 'ERROR! '.$message.' Expected a value under '.$errorThreshold.'.';
+			}
+		}
+
+		return tx_caretaker_TestResult::create($state, $issueCount, $message);
+	}
 
 	/**
 	 * Get the configuration for the Test
@@ -164,8 +140,7 @@ class tx_caretakerredmineTestService extends tx_caretaker_TestServiceBase {
 	 * @return array 
 	 */
 	protected function getConfiguration() {
-				
-		$config = array(
+		$config = array (
 			'redmine_url'	=> $this->getConfigValue('redmine_url'),
 			'protocol'		=> $this->getConfigValue('protocol'),
 			'api_key'		=> $this->getConfigValue('api_key'),

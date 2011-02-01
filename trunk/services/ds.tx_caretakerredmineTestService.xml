@@ -26,7 +26,7 @@
 		
 			<redmine_url>
 				<TCEforms>
-					<label>Host where Redmine can be reached (without protocol!)</label>
+					<label>Host where Redmine can be reached (without protocol and tailing / !)</label>
 					<config>
 						<type>input</type>
 					</config>
@@ -68,13 +68,49 @@
 						<type>select</type>
 						<items>
 					    	<numIndex index="0">
-					    		<numIndex index="0">Number of open tickets</numIndex>
-								<numIndex index="1">openTickets</numIndex>
+					    		<numIndex index="0">Number of all open tickets</numIndex>
+								<numIndex index="1">allOpenTickets</numIndex>
+					    	</numIndex>
+							<numIndex index="1">
+					    		<numIndex index="0">Number of open tickets in project</numIndex>
+								<numIndex index="1">openTicketsInProject</numIndex>
 					    	</numIndex>
 						</items>
 					</config>
 				</TCEforms>
 			</method>
+
+			<optWarningThreshold>
+				<TCEforms>
+					<label>Warning threshold</label>
+					<config>
+						<type>input</type>
+						<eval>int</eval>
+						<size>5</size>
+					</config>
+				</TCEforms>
+			</optWarningThreshold>
+
+			<optErrorThreshold>
+				<TCEforms>
+					<label>Error threshold</label>
+					<config>
+						<type>input</type>
+						<eval>int</eval>
+						<size>5</size>
+					</config>
+				</TCEforms>
+			</optErrorThreshold>
+
+			<optProjectId>
+				<TCEforms>
+					<label>Project ID</label>
+					<config>
+						<type>input</type>
+						<size>20</size>
+					</config>
+				</TCEforms>
+			</optProjectId>
 		</el>
 	</ROOT>
 </T3DataStructure>
