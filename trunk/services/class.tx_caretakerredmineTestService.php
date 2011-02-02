@@ -108,7 +108,7 @@ class tx_caretakerredmineTestService extends tx_caretaker_TestServiceBase {
 		$message = 'Something went wrong. ^^';
 		$issueCount = 0;
 
-		$projectId = $this->getConfigValue('optProjectId');
+		$projectId = $this->config['optProjectId'];
 
 		if (empty($projectId)) {
 			$state = tx_caretaker_Constants::state_error;
@@ -143,10 +143,25 @@ class tx_caretakerredmineTestService extends tx_caretaker_TestServiceBase {
 			'redmine_url'	=> $this->getConfigValue('redmine_url'),
 			'protocol'		=> $this->getConfigValue('protocol'),
 			'api_key'		=> $this->getConfigValue('api_key'),
-			'method'		=> $this->getConfigValue('method')
+			'method'		=> $this->getConfigValue('method'),
+			'parameters'	=> $this->parseAdditionalParameters($this->getConfigValue('optAdditionalParams'))
 		);
 
 		return $config;
+	}
+
+	protected function parseAdditionalParameters($stringInput) {
+		$result = array();
+
+		$pairs = t3lib_div::trimExplode(',', $stringInput);
+		if (is_array($pairs) && count($pairs) > 0) {
+			foreach ($pairs as $pair) {
+				$keyValue = t3lib_div::trimExplode('=', $pair);
+				$result[$keyValue[0]] = $keyValue[1];
+			}
+		}
+
+		return $result;
 	}
 }
 

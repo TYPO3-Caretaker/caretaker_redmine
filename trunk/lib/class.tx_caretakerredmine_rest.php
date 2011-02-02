@@ -168,6 +168,32 @@ class tx_caretakerredmine_rest {
 	}
 
 	/**
+	 * Returns a list of issues defined by the given parameters. The result format is defined by the
+	 * parameter $format
+	 *
+	 * @param array		$parameters:	A key -> value store of the parameters that will be send
+	 * @param string	$format:		The format that should be returned (json or xml / DEFAULT: json)
+	 * @return string
+	 */
+	public function getIssuesWithParametersRaw(Array $parameters, $format = 'json') {
+		return $this->sendRequest(
+			'issues',
+			$parameters,
+			$format
+		);
+	}
+
+	/**
+	 * Returns a list of issues defined by the given parameters as array.
+	 *
+	 * @param array		$parameters:	A key -> value store of the parameters that will be send
+	 * @return array
+	 */
+	public function getIssuesWithParameters(Array $parameters) {
+		return json_decode($this->getIssuesWithParametersRaw($parameters, 'json'));
+	}
+
+	/**
 	 * Returns a list of all issues that are assigend to a certain user. The result format is
 	 * defined by the parameter $format
 	 *
